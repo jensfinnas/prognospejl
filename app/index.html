@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="">
+  <head>
+    <meta charset="utf-8">
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimal-ui">
+    <title>prognospejl</title>
+    <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
+
+    <!-- build:css styles/vendor.css -->
+    <!-- bower:css -->
+    <link rel="stylesheet" href="../bower_components/nouislider/distribute/nouislider.min.css" />
+    <!-- endbower -->
+    <!-- endbuild -->
+
+    <!-- build:css styles/main.css -->
+    <link rel="stylesheet" href="styles/main.css">
+    <!-- endbuild -->
+
+  </head>
+  <body>
+    <!--[if lt IE 9]>
+      <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+    <![endif]-->
+
+    <div id="chart"></div>
+    <div id="slider"></div>
+
+    <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
+    <script>
+      (function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=
+      function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;
+      e=o.createElement(i);r=o.getElementsByTagName(i)[0];
+      e.src='//www.google-analytics.com/analytics.js';
+      r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));
+      ga('create','UA-XXXXX-X');ga('send','pageview');
+    </script>
+
+    <!-- build:js scripts/vendor.js -->
+    <!-- bower:js -->
+    <script src="../bower_components/d3/d3.js"></script>
+    <script src="../bower_components/d3-tip/index.js"></script>
+    <script src="../bower_components/nouislider/distribute/nouislider.js"></script>
+    <!-- endbower -->
+    <!-- endbuild -->
+
+        <!-- build:js scripts/main.js -->
+        <script src="scripts/chart.js"></script>
+        <script src="scripts/data.js"></script>
+        <script src="scripts/formats.js"></script>
+        <script src="scripts/utils.js"></script>
+
+        <!-- endbuild -->
+    <script type="text/javascript">
+      d3.csv("data/actual.csv",function(err,data) {
+        data.forEach(function(d) {
+          d.date = parseDate(d.date);
+          d.ranta = floatFromString(d.ranta);
+        });
+        var dateStart = new Date(2007,0,1);
+        var chart = new LineChart("#chart", getChartData(data, 'ranta', dateStart), {
+            interpolate: "step-after",
+            yAxisTitle: "Reporänta"
+          }
+        );
+
+        d3.csv("data/prognoser.csv",function(err,resp) {
+          resp.forEach(function(d) {
+            d.date = parseDate(d.date);
+            d.forecastDate = new Date(d.progyear, 11, 31);
+            d.al = floatFromString(d.al);
+            d.bnp = floatFromString(d.bnp);
+            d.fso = floatFromString(d.fso);
+            d.kpi = floatFromString(d.kpi);
+            d.kpif = floatFromString(d.kpif);
+            d.ranta = floatFromString(d.ranta);
+          })
+          var forecastData = getForecastData(resp, "RB", "ranta");
+          chart.addForecast(forecastData);
+
+
+          function getMonthsDiff(date0, date1) {
+            return (date1.getFullYear() - date0.getFullYear()) * 12 + date1.getMonth() - date0.getMonth();
+          }
+          var slider = document.getElementById('slider');
+          var startDate = forecastData[0].values[0].date;
+          var endDate = forecastData[forecastData.length - 1].values[0].date;
+          console.log(startDate);
+
+          noUiSlider.create(slider, {
+            start: [0],
+            step: 1,
+            range: {
+              'min': 0,
+              'max': forecastData.length - 1
+            }
+          })
+          .on('update', function( values, handle ) {
+            var date = forecastData[ +values[0] ].values[0].date
+            chart.showForecast(date);
+          });
+        })
+      })
+    </script>
+    
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "name": "prognospejl",
+  "private": true,
+  "dependencies": {
+    "d3": "~3.5.12",
+    "d3-tip": "~0.6.7",
+    "nouislider": "~8.2.1"
+  }
+}
